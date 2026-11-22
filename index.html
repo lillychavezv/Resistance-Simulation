@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Managing Organizational Change: Orientation (Prototype)</title>
+<style>
+:root{
+  --navy:#1f3a5f; --blue:#2f6fb0; --bg:#eef2f7; --ink:#1b2430; --muted:#4a5666;
+  --card:#ffffff; --line:#c9d3df; --good:#1d7a46; --warn:#8a5200; --bad:#a3302a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.app{max-width:980px;margin:0 auto;padding:12px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 4px 10px}
+.logo{font-weight:800;color:var(--navy);letter-spacing:.02em;font-size:1.15rem}
+.course{color:var(--muted);font-size:.9rem}
+.stage{position:relative;aspect-ratio:16/8;background:#dfe7f1;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.stage svg.bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.chars{position:absolute;inset:0;pointer-events:none}
+.char{position:absolute;bottom:0;height:90%}
+.char svg{height:100%;width:auto;display:block}
+.char.right{right:9%}
+.char.left{left:9%}
+.char.dim{opacity:.72;filter:saturate(.75)}
+.prop{position:absolute;left:3%;top:7%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.82rem;max-width:46%;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.prop .prop-h{font-weight:700;color:var(--navy);margin-bottom:2px}
+.layout{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+.layout.with-notebook{grid-template-columns:1fr 270px}
+.dialogue{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px 18px;min-height:150px}
+.dialogue:focus{outline:3px solid var(--blue);outline-offset:2px}
+.name{display:inline-block;background:var(--navy);color:#fff;border-radius:8px;padding:2px 12px;font-weight:700;margin-bottom:8px}
+.text{font-size:1.08rem}
+.text p{margin:.2em 0 .5em}
+.text.narrator{color:var(--muted);font-style:italic}
+.text ol,.text ul{margin:.3em 0 .5em 1.2em;padding:0}
+.muted{color:var(--muted)}
+.prompt{font-size:1.15rem;margin:0 0 .5em}
+.key{display:inline-block;min-width:30px;text-align:center;border:2px solid var(--navy);border-radius:50%;font-weight:700;color:var(--navy);margin-right:6px}
+ul.nav-list{list-style:none;margin-left:0!important}
+ul.nav-list li{margin:.35em 0}
+fieldset{border:0;margin:0 0 10px;padding:0}
+.opt{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:10px;padding:9px 12px;margin:7px 0;cursor:pointer;background:#f9fbfd}
+.opt input{margin-top:5px;flex:none}
+.opt.picked{border-color:var(--blue);background:#eef5fc}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.secondary{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;border-left:6px solid var(--line);background:#f6f8fb}
+.fb.good{border-color:var(--good);background:#f0faf4}
+.fb.bad{border-color:var(--bad);background:#fdf2f1}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0}
+.card{text-align:left;background:#f7f9fc;border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit;display:flex;flex-direction:column;gap:4px}
+.card.done{border-color:var(--good);background:#f1faf5}
+.tag{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);font-weight:700}
+.state{font-size:.82rem;color:var(--muted)}
+.clue{margin-top:8px}
+.clue-card{border:2px solid var(--blue);background:#f3f8fd;border-radius:12px;padding:10px 14px}
+.clue-card p{margin:.25em 0}
+.notebook{background:#fffdf5;border:1px solid #e3d9a8;border-radius:14px;padding:14px 16px;align-self:start}
+.notebook h3{margin:0 0 6px;font-size:1rem;color:var(--navy)}
+.notebook ul{margin:0;padding-left:1.1em;font-size:.92rem}
+.notebook li{margin:.4em 0}
+.result{border-left:6px solid var(--blue);background:#f3f8fd;padding:12px 14px;border-radius:10px}
+.result[data-tone="good"]{border-color:var(--good);background:#f0faf4}
+.result[data-tone="warn"]{border-color:var(--warn);background:#fff8ec}
+.result[data-tone="bad"]{border-color:var(--bad);background:#fdf2f1}
+.result .label{font-weight:800;margin-bottom:2px}
+table{border-collapse:collapse;width:100%;font-size:.93rem;margin:8px 0}
+caption{text-align:left;font-weight:700;margin-bottom:4px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#eaf0f7}
+.letters{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.letter{width:52px;height:52px;border-radius:12px;border:2px solid var(--navy);background:#fff;color:var(--navy);font-size:1.4rem;font-weight:800;cursor:pointer}
+.letter[aria-pressed="true"]{background:var(--navy);color:#fff}
+.letter.seen{box-shadow:inset 0 0 0 3px #bcd7ee}
+textarea{width:100%;min-height:90px;font:inherit;padding:10px;border:2px solid var(--line);border-radius:10px}
+label.block{display:block;font-weight:600;margin:8px 0 4px}
+details{margin:8px 0}
+summary{cursor:pointer;font-weight:600;color:var(--navy)}
+.sample{border:1px dashed var(--blue);background:#f7fbff;border-radius:10px;padding:10px 12px;margin:8px 0}
+.controls{display:flex;align-items:center;gap:12px;margin-top:12px}
+.ctl{width:48px;height:48px;flex:none;border-radius:50%;border:2px solid var(--navy);background:#fff;color:var(--navy);font-size:1.5rem;font-weight:700;cursor:pointer;line-height:1}
+.ctl.primary{background:var(--navy);color:#fff}
+.ctl:disabled{opacity:.4;cursor:not-allowed}
+.progress{flex:1}
+.progress-text{font-size:.85rem;color:var(--muted);margin-bottom:3px}
+.bar{height:8px;background:#d5dee9;border-radius:6px;overflow:hidden}
+#progressFill{height:100%;background:var(--blue);width:0}
+.modal{position:fixed;inset:0;background:rgba(20,30,45,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal[hidden]{display:none}
+.modal-box{background:#fff;border-radius:14px;padding:20px 22px;max-width:380px}
+.modal-box h2{margin:0 0 6px;font-size:1.15rem}
+.row{display:flex;gap:10px;margin-top:12px}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:#fff;padding:6px 10px;z-index:20}
+@media (max-width:760px){
+  .layout.with-notebook{grid-template-columns:1fr}
+  .stage{aspect-ratio:16/10}
+  .prop{max-width:60%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#dialogue">Skip to dialogue</a>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">Optiwell</div>
+    <div class="course">Managing Organizational Change · Module 1: Orientation (prototype)</div>
+  </header>
+  <main>
+    <section class="stage" id="stage" aria-label="Scene illustration"></section>
+    <div class="layout" id="layout">
+      <section class="dialogue" id="dialogue" tabindex="-1" aria-live="polite"></section>
+      <aside class="notebook" id="notebook" aria-label="Evidence notebook" hidden></aside>
+    </div>
+  </main>
+  <nav class="controls" aria-label="Course navigation">
+    <button class="ctl" id="btnExit" type="button" aria-label="Exit course" title="Exit">×</button>
+    <button class="ctl" id="btnBack" type="button" aria-label="Back" title="Back">‹</button>
+    <div class="progress">
+      <div class="progress-text" id="progressText"></div>
+      <div class="bar" aria-hidden="true"><div id="progressFill"></div></div>
+    </div>
+    <button class="ctl primary" id="btnNext" type="button" aria-label="Continue" title="Continue">›</button>
+  </nav>
+</div>
+
+<div class="modal" id="exitModal" role="dialog" aria-modal="true" aria-labelledby="exitTitle" hidden>
+  <div class="modal-box">
+    <h2 id="exitTitle">Exit the course?</h2>
+    <p>Your progress in this prototype is not saved.</p>
+    <div class="row">
+      <button class="btn secondary" id="exitStay" type="button">Stay</button>
+      <button class="btn" id="exitConfirm" type="button">Exit</button>
+    </div>
+  </div>
+</div>
+<noscript><p style="padding:16px">This prototype needs JavaScript to run.</p></noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============ CONTENT ============ */
+
+  var CLUES = [
+    { id: 'hallway', kind: 'Conversation', title: 'Chat with Megan in the hallway',
+      who: 'Megan', text: 'Honestly, I never really understood why we switched. Email and Zoom were working fine for me.',
+      note: 'Megan says no one explained why the change was happening.',
+      shows: 'No one explained why the switch happened.', points: 'Awareness' },
+    { id: 'dev', kind: 'Conversation', title: 'Ask Dev, her teammate',
+      who: 'Dev', text: 'I still email Megan and send her Zoom links. She answers fastest that way, so nobody has really switched with her.',
+      note: 'Teammates still email and Zoom Megan, so the old way keeps working.',
+      shows: 'Teammates still use email and Zoom with her, so the old way keeps working.', points: 'Reinforcement' },
+    { id: 'itlog', kind: 'Record', title: 'Open the IT help-desk log',
+      who: null, text: 'Ticket #4471, opened by Megan six weeks ago: "Cannot install the desktop app. Storage full." Status: Open. No response logged.',
+      note: 'Megan reported a storage problem six weeks ago. It is still open.',
+      shows: 'A storage ticket has been open for six weeks.', points: 'Ability' },
+    { id: 'training', kind: 'Record', title: 'Review training records',
+      who: null, text: 'Work system onboarding session: Megan was invited and did not attend (it overlapped with a client call). Make-up session: not scheduled.',
+      note: 'Megan missed onboarding training and no make-up was scheduled.',
+      shows: 'She missed onboarding and no make-up was scheduled.', points: 'Knowledge' },
+    { id: 'dashboard', kind: 'Data', title: "Check Megan's sales dashboard",
+      who: null, text: 'Megan closed more deals than most of the team this quarter.',
+      note: 'Megan has strong sales results this quarter.',
+      shows: 'Strong sales results.', points: 'Context only. It shows performance, not why she avoids the system.' }
+  ];
+
+  var CHOICES = [
+    { id: 'knowledge', label: 'Schedule a training session so she can learn how the system works.' },
+    { id: 'comply', label: 'Tell her the switch is required and set a Friday deadline.' },
+    { id: 'awareness', label: 'Start by explaining why Optiwell moved to the new system and what it could do for her client work.' },
+    { id: 'ability', label: 'Get her IT ticket resolved so she can install the app.' },
+    { id: 'reinforcement', label: 'Ask the team to stop emailing her and to message her in the new system instead.' }
+  ];
+
+  var OUTCOMES = {
+    awareness: [
+      { who: 'You', text: 'Megan, I realized nobody explained why we made this switch. Can I walk you through it?' },
+      { who: 'Megan', mood: 'pleased', text: 'Honestly, I thought it was just an IT thing. If my client threads and calls live in one place, that could save me time.' },
+      { who: 'You', text: 'What has been getting in the way?' },
+      { who: 'Megan', mood: 'thoughtful', text: "Two things. The app won't install on my laptop, and I missed the training." },
+      { result: { tone: 'good', label: 'Strong first move', text: 'Megan is interested and told you about two more barriers. Explaining the reason for the change opened the conversation. Next, you would clear the IT ticket and schedule a make-up session.' } }
+    ],
+    knowledge: [
+      { who: 'You', text: "Let's get you into a training session this week." },
+      { who: 'Megan', mood: 'thoughtful', text: "Sure. But I can't even install the app. My storage is full." },
+      { who: 'Megan', mood: 'thoughtful', text: "And I'm still not sure why we switched in the first place." },
+      { result: { tone: 'warn', label: 'Partial progress', text: 'Training is on the calendar, but Megan cannot practice what she learns, and she still does not know why the team switched. Training helps most once the reason is clear and the barriers are cleared.' } }
+    ],
+    ability: [
+      { who: 'You', text: "I've moved your IT ticket to the top of the list. It should be fixed tomorrow." },
+      { who: 'Megan', mood: 'neutral', text: "Thanks. I'll install it." },
+      { who: 'Megan', mood: 'thoughtful', text: "I still don't really see why I need it, though." },
+      { result: { tone: 'warn', label: 'Partial progress', text: "The technical barrier is gone, but Megan's reason to switch has not changed. She may install the app and keep using email." } }
+    ],
+    reinforcement: [
+      { who: 'You', text: "I've asked the team to message you in the new system from now on." },
+      { who: 'Megan', mood: 'tense', text: "So people are ignoring my emails now? I don't even know how to use the chat." },
+      { result: { tone: 'bad', label: 'Risky', text: 'Pressure arrived before understanding and ability, so Megan feels cut off. Reinforcement helps after people are ready to change. It cannot replace helping them get ready.' } }
+    ],
+    comply: [
+      { who: 'You', text: 'The new system is required. I need you using it by Friday.' },
+      { who: 'Megan', mood: 'tense', text: 'Fine.' },
+      { who: 'Narrator', text: 'On Friday, Megan logs in once. By Monday, she is back to email.' },
+      { result: { tone: 'bad', label: 'Compliance, not commitment', text: 'Nothing that caused the avoidance has changed: no explanation, an unresolved ticket, and a missed training. Managing the behavior without finding its source can cost trust.' } }
+    ]
+  };
+
+  var ADKAR = [
+    { letter: 'A', name: 'Awareness',
+      def: 'This refers to employees understanding why the change is happening, the benefit of the change, and recognizing the impact of not changing.',
+      megan: 'Clue: Megan said no one explained why the change was happening.' },
+    { letter: 'D', name: 'Desire',
+      def: 'Desire to support the change refers to employees feeling motivated to change, align their values and goals with the change, and are committed to sustaining the change in the workplace.',
+      megan: 'No clue yet. Would Megan want to use the system once she understands the benefit? You would find out in a conversation.' },
+    { letter: 'K', name: 'Knowledge',
+      def: 'Knowledge represents whether or not employees learn the new skills/behaviors, understand the new process or technology, and employee self-efficacy.',
+      megan: 'Clue: Megan missed the onboarding session and no make-up was scheduled.' },
+    { letter: 'A', name: 'Ability',
+      def: 'Ability to implement the change refers to the application of the new skills/behaviors in real work settings. It also refers to the ability to overcome obstacles or barriers.',
+      megan: 'Clue: her IT ticket about storage has been open for six weeks.' },
+    { letter: 'R', name: 'Reinforcement',
+      def: 'Reinforcement refers to an employee change sustainment. Reinforcement looks like recognizing and celebrating progress, providing employees with ongoing support and feedback, and the organization integrating the change into their work culture and broader systems.',
+      megan: 'Clue: teammates still email her and send Zoom links, so the old way keeps working.' }
+  ];
+
+  var SCENES = [
+    { id: 'welcome', bg: 'title', beats: [
+      { who: 'Narrator', text: "Welcome to Optiwell's Managing Organizational Change course! This course consists of interactive scenarios and activities, colleague discussions, and collaborative action planning." } ] },
+    { id: 'goals', bg: 'plain', beats: [
+      { who: 'Narrator', html: '<p>In this module, the goal is for you to:</p><ol><li>Understand what organizational change resistance is.</li><li>Identify sources of change resistance.</li><li>Form a hypothesis about change management solutions.</li></ol>' } ] },
+    { id: 'nav', bg: 'plain', beats: [
+      { who: 'Narrator', html: '<p><strong>How to navigate</strong></p><ul class="nav-list"><li><span class="key">×</span> Select to exit the course.</li><li><span class="key">‹</span> Select to go back.</li><li><span class="key">›</span> Select to move forward.</li></ul><p class="muted">You can also use the left and right arrow keys.</p>' } ] },
+    { id: 'define', bg: 'plain', beats: [
+      { who: 'Narrator', text: 'Change resistance refers to the pushback, hesitation, or opposition employees display when a company or organization implements new processes, workflows, tools, or strategies.' },
+      { who: 'Narrator', text: "Let's take a look at a quick scenario." } ] },
+    { id: 'setup', bg: 'office', prop: 'email', chars: [{ n: 'megan', pos: 'right', mood: 'neutral' }], beats: [
+      { who: 'Narrator', text: 'Optiwell recently implemented an AI-powered work operating system. It has direct messaging and integrated conferencing features.' },
+      { who: 'Narrator', text: 'You manage the sales team. Megan, an employee on your team, continues to send emails to colleagues and set up meeting calls through Zoom.' },
+      { who: 'You', text: 'It has been two months since the rollout. Why has Megan not made the switch?' } ] },
+    { id: 'check', type: 'quiz', bg: 'office', chars: [{ n: 'megan', pos: 'right', mood: 'neutral' }] },
+    { id: 'dig', bg: 'office', chars: [{ n: 'megan', pos: 'right', mood: 'neutral' }], beats: [
+      { who: 'Narrator', text: "Let's dig a little deeper into this scenario." },
+      { who: 'You', text: 'I have a one-on-one with Megan at 3 pm. Before then, I can look into what might be going on.' } ] },
+    { id: 'hub', type: 'hub', bg: 'office', notebook: true, chars: [{ n: 'megan', pos: 'right', mood: 'neutral' }] },
+    { id: 'decision', type: 'decision', bg: 'office', notebook: true, chars: [{ n: 'megan', pos: 'right', mood: 'neutral' }] },
+    { id: 'outcome', bg: 'meeting', notebook: true, chars: [{ n: 'megan', pos: 'right', mood: 'neutral' }],
+      beatsFn: function () { return OUTCOMES[state.choice]; } },
+    { id: 'debrief', type: 'debrief', bg: 'plain', notebook: false },
+    { id: 'adkar', type: 'adkar', bg: 'plain' },
+    { id: 'hypothesis', type: 'hypothesis', bg: 'plain' },
+    { id: 'discussion', type: 'discussion', bg: 'plain' },
+    { id: 'end', type: 'end', bg: 'title' }
+  ];
+
+  /* ============ STATE ============ */
+
+  var state = freshState();
+  function freshState() {
+    return { i: 0, beat: 0, quizDone: false, clues: {}, choice: null, committed: false,
+             adkarSeen: {}, adkarOpen: null, hypothesis: '', post: '', reply: '', exited: false };
+  }
+
+  /* ============ HELPERS ============ */
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function idx(id) { for (var k = 0; k < SCENES.length; k++) { if (SCENES[k].id === id) return k; } return 0; }
+  function typeOf(sc) { return sc.type || 'story'; }
+  function getBeats(sc) { return sc.beatsFn ? sc.beatsFn() : sc.beats; }
+  function clueCount() { var n = 0; CLUES.forEach(function (c) { if (state.clues[c.id]) n++; }); return n; }
+  function choiceById(id) { for (var k = 0; k < CHOICES.length; k++) { if (CHOICES[k].id === id) return CHOICES[k]; } return null; }
+
+  /* ============ ILLUSTRATION ============ */
+
+  var FONT = 'system-ui,Arial,sans-serif';
+
+  function bgSVG(name) {
+    var s = '<svg class="bg" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">';
+    if (name === 'title') {
+      s += '<defs><linearGradient id="gT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f3a5f"/><stop offset="1" stop-color="#3b78b8"/></linearGradient></defs>' +
+        '<rect width="800" height="400" fill="url(#gT)"/>' +
+        '<circle cx="680" cy="80" r="130" fill="#fff" opacity=".07"/><circle cx="110" cy="340" r="170" fill="#fff" opacity=".06"/>' +
+        '<text x="400" y="180" text-anchor="middle" font-size="70" font-weight="800" fill="#fff" font-family="' + FONT + '">Optiwell</text>' +
+        '<text x="400" y="228" text-anchor="middle" font-size="30" fill="#e6eefa" font-family="' + FONT + '">Managing Organizational Change</text>' +
+        '<text x="400" y="272" text-anchor="middle" font-size="20" fill="#cfe0f5" font-family="' + FONT + '">Module 1: Orientation · Prototype</text>';
+    } else if (name === 'office') {
+      s += '<rect width="800" height="400" fill="#e9eef4"/><rect y="320" width="800" height="80" fill="#c7d0db"/>' +
+        '<rect x="470" y="40" width="260" height="170" rx="6" fill="#bcd7ee" stroke="#8fb0cf" stroke-width="4"/>' +
+        '<line x1="600" y1="40" x2="600" y2="210" stroke="#8fb0cf" stroke-width="4"/>' +
+        '<rect x="490" y="130" width="22" height="80" fill="#8fb0cf"/><rect x="520" y="110" width="26" height="100" fill="#9dbbd6"/>' +
+        '<rect x="620" y="140" width="30" height="70" fill="#8fb0cf"/><rect x="660" y="100" width="24" height="110" fill="#9dbbd6"/>' +
+        '<rect x="40" y="250" width="330" height="14" rx="4" fill="#8b6b4a"/><rect x="60" y="264" width="12" height="62" fill="#6f533a"/><rect x="338" y="264" width="12" height="62" fill="#6f533a"/>' +
+        '<rect x="130" y="170" width="120" height="80" rx="6" fill="#2b3440"/><rect x="138" y="178" width="104" height="64" rx="3" fill="#4d7fb3"/>' +
+        '<rect x="720" y="262" width="34" height="58" rx="6" fill="#9a6a4b"/><path d="M737 264 C700 222 705 192 737 172 C770 192 774 224 737 264Z" fill="#4c9a6a"/>';
+    } else if (name === 'meeting') {
+      s += '<rect width="800" height="400" fill="#eef1f5"/><rect y="320" width="800" height="80" fill="#cdd3dc"/>' +
+        '<rect x="60" y="40" width="300" height="150" rx="6" fill="#fff" stroke="#b6c1cf" stroke-width="4"/>' +
+        '<path d="M90 80 H300 M90 110 H260 M90 140 H320" stroke="#9fb2c8" stroke-width="6" stroke-linecap="round"/>' +
+        '<rect x="100" y="270" width="380" height="16" rx="5" fill="#8b6b4a"/><rect x="130" y="286" width="12" height="46" fill="#6f533a"/><rect x="440" y="286" width="12" height="46" fill="#6f533a"/>';
+    } else {
+      s += '<defs><linearGradient id="gP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f0f8"/><stop offset="1" stop-color="#d4e0ee"/></linearGradient></defs>' +
+        '<rect width="800" height="400" fill="url(#gP)"/><circle cx="700" cy="70" r="110" fill="#fff" opacity=".5"/><circle cx="90" cy="330" r="150" fill="#fff" opacity=".4"/>';
+    }
+    return s + '</svg>';
+  }
+
+  var PEOPLE = {
+    megan: { name: 'Megan', skin: '#d6a07a', top: '#2a8c8c', hair: '#3a2a22', style: 'bob' },
+    dev: { name: 'Dev', skin: '#8d5a3b', top: '#c8702a', hair: '#1f2933', style: 'short' }
+  };
+  var MOODS = {
+    neutral: { word: 'looking neutral', brows: ['M70 100 L94 100', 'M106 100 L130 100'], mouth: 'M88 142 Q100 145 112 142' },
+    pleased: { word: 'smiling', brows: ['M70 102 Q82 94 94 100', 'M106 100 Q118 94 130 102'], mouth: 'M84 138 Q100 154 116 138' },
+    thoughtful: { word: 'looking thoughtful', brows: ['M70 98 Q82 92 94 98', 'M106 102 L130 100'], mouth: 'M90 145 Q100 141 110 146' },
+    tense: { word: 'looking tense', brows: ['M70 96 L94 103', 'M106 103 L130 96'], mouth: 'M88 145 L112 145' }
+  };
+
+  function personSVG(key, moodKey) {
+    var p = PEOPLE[key], m = MOODS[moodKey] || MOODS.neutral;
+    var hair = p.style === 'bob'
+      ? '<path d="M50 122 C44 56 84 40 104 42 C140 44 156 78 150 128 L142 152 C140 120 134 94 100 88 C70 92 60 120 58 152 Z" fill="' + p.hair + '"/>'
+      : '<path d="M54 102 C54 60 80 46 102 46 C128 46 148 64 146 102 C130 84 74 82 54 102 Z" fill="' + p.hair + '"/>';
+    return '<svg viewBox="0 0 200 300" role="img" aria-label="' + esc(p.name + ', ' + m.word) + '">' +
+      '<ellipse cx="100" cy="292" rx="70" ry="8" fill="#000" opacity=".12"/>' +
+      '<path d="M30 300 C30 222 60 190 100 190 C140 190 170 222 170 300 Z" fill="' + p.top + '"/>' +
+      '<rect x="86" y="160" width="28" height="34" rx="10" fill="' + p.skin + '"/>' +
+      '<ellipse cx="100" cy="115" rx="46" ry="54" fill="' + p.skin + '"/>' + hair +
+      '<circle cx="82" cy="118" r="4" fill="#222"/><circle cx="118" cy="118" r="4" fill="#222"/>' +
+      '<path d="' + m.brows[0] + '" stroke="#2b2b2b" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<path d="' + m.brows[1] + '" stroke="#2b2b2b" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<path d="' + m.mouth + '" stroke="#5b2f2f" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+  }
+
+  var PROPS = {
+    email: '<div class="prop"><div class="prop-h">Email · Sent</div><div><b>To:</b> Dev</div><div><b>Subject:</b> Q4 pipeline notes</div><div>Zoom link for our 2 pm sync is below.</div></div>'
+  };
+
+  function moodAt(sc, beats, upto, c) {
+    var mood = c.mood || 'neutral';
+    if (beats) {
+      for (var j = 0; j <= upto && j < beats.length; j++) {
+        if (beats[j].who && beats[j].who.toLowerCase() === c.n && beats[j].mood) mood = beats[j].mood;
+      }
+    }
+    return mood;
+  }
+
+  function renderStage(sc, beats, upto) {
+    var html = bgSVG(sc.bg);
+    if (sc.prop) html += PROPS[sc.prop];
+    var speaker = (beats && beats[upto] && beats[upto].who) ? beats[upto].who.toLowerCase() : '';
+    if (sc.chars && sc.chars.length) {
+      html += '<div class="chars">';
+      sc.chars.forEach(function (c) {
+        var dim = speaker && PEOPLE[speaker] && speaker !== c.n ? ' dim' : '';
+        html += '<div class="char ' + c.pos + dim + '">' + personSVG(c.n, moodAt(sc, beats, upto, c)) + '</div>';
+      });
+      html += '</div>';
+    }
+    $('stage').innerHTML = html;
+  }
+
+  /* ============ RENDERERS ============ */
+
+  function resultHTML(r) {
+    return '<div class="result" data-tone="' + r.tone + '"><div class="label">' + esc(r.label) + '</div><div>' + esc(r.text) + '</div></div>';
+  }
+
+  function renderStory(sc) {
+    var beats = getBeats(sc), b = beats[state.beat];
+    renderStage(sc, beats, state.beat);
+    var h = '';
+    if (b.result) {
+      h = resultHTML(b.result);
+    } else {
+      var narr = !b.who || b.who === 'Narrator';
+      if (!narr) h += '<div class="name">' + esc(b.who) + '</div>';
+      h += '<div class="text' + (narr ? ' narrator' : '') + '">' + (b.html ? b.html : '<p>' + esc(b.text) + '</p>') + '</div>';
+    }
+    $('dialogue').innerHTML = h;
+  }
+
+  function renderQuiz(sc) {
+    renderStage(sc, null, 0);
+    var opts = [
+      { id: 'hesitation', label: 'Hesitation', fb: "Not quite, Megan doesn't seem to acknowledge the change even occurred. Try again." },
+      { id: 'pushback', label: 'Pushback', fb: "Not quite, Megan didn't complain or raise any questions about the change. Try again." },
+      { id: 'avoidance', label: 'Avoidance', fb: "That's right! Megan kept using her prior communication process instead of the new system. Avoidance describes what she is doing. It does not yet tell us why." }
+    ];
+    var h = '<h2 class="prompt">What kind of change resistance is Megan displaying?</h2>' +
+      '<p class="muted"><strong>Hesitation:</strong> moving slowly or unsurely toward the change. <strong>Pushback:</strong> objecting to or arguing against the change. <strong>Avoidance:</strong> continuing the old way and not engaging with the change.</p>' +
+      '<fieldset><legend class="sr">Choose one answer</legend>';
+    opts.forEach(function (o) {
+      h += '<label class="opt"><input type="radio" name="q1" value="' + o.id + '"' + (state.quizDone && o.id === 'avoidance' ? ' checked' : '') + (state.quizDone ? ' disabled' : '') + '><span>' + o.label + '</span></label>';
+    });
+    h += '</fieldset><button class="btn" id="qCheck" type="button"' + (state.quizDone ? ' disabled' : '') + '>Check answer</button>' +
+      '<div id="qFb" role="status" aria-live="polite">' + (state.quizDone ? '<div class="fb good">' + esc(opts[2].fb) + '</div>' : '') + '</div>';
+    $('dialogue').innerHTML = h;
+    $('qCheck').addEventListener('click', function () {
+      var sel = document.querySelector('input[name="q1"]:checked');
+      var box = $('qFb');
+      if (!sel) { box.innerHTML = '<div class="fb">Select an answer first.</div>'; return; }
+      var o = opts.filter(function (x) { return x.id === sel.value; })[0];
+      if (o.id === 'avoidance') {
+        state.quizDone = true;
+        box.innerHTML = '<div class="fb good">' + esc(o.fb) + '</div>';
+        Array.prototype.forEach.call(document.querySelectorAll('input[name="q1"]'), function (i) { i.disabled = true; });
+        $('qCheck').disabled = true;
+        updateControls();
+      } else {
+        box.innerHTML = '<div class="fb bad">' + esc(o.fb) + '</div>';
+      }
+    });
+  }
+
+  function clueHTML(c) {
+    var body = c.who && c.kind === 'Conversation'
+      ? '<p><strong>' + esc(c.who) + ':</strong> "' + esc(c.text) + '"</p>'
+      : '<p>' + esc(c.text) + '</p>';
+    return '<div class="clue-card"><span class="tag">' + esc(c.kind) + '</span>' + body + '</div>';
+  }
+
+  function renderHub(sc) {
+    renderStage(sc, null, 0);
+    var h = '<h2 class="prompt">As a manager, you notice that Megan isn\'t using the AI-powered work operating system, implemented two months ago. What might be some reasons for Megan avoiding this change?</h2>' +
+      '<p class="muted">Look into at least two things before your one-on-one. <span id="hubCount"></span></p>' +
+      '<div class="cards" role="group" aria-label="Places to look">';
+    CLUES.forEach(function (c) {
+      h += '<button type="button" class="card' + (state.clues[c.id] ? ' done' : '') + '" data-clue="' + c.id + '"><span class="tag">' + esc(c.kind) + '</span><strong>' + esc(c.title) + '</strong><span class="state">' + (state.clues[c.id] ? 'Checked' : 'Not checked') + '</span></button>';
+    });
+    h += '</div><div id="clueView" class="clue" role="status" aria-live="polite"></div>';
+    $('dialogue').innerHTML = h;
+    updateHubCount();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-clue]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-clue');
+        var c = CLUES.filter(function (x) { return x.id === id; })[0];
+        state.clues[id] = true;
+        btn.classList.add('done');
+        btn.querySelector('.state').textContent = 'Checked';
+        $('clueView').innerHTML = clueHTML(c);
+        updateHubCount();
+        renderNotebook(sc);
+        updateControls();
+      });
+    });
+  }
+  function updateHubCount() {
+    var el = $('hubCount');
+    if (el) el.textContent = 'Checked ' + clueCount() + ' of ' + CLUES.length + '.';
+  }
+
+  function renderDecision(sc) {
+    renderStage(sc, null, 0);
+    var h = '<h2 class="prompt">Your one-on-one is about to start. Based on what you found, where will you focus the conversation first?</h2>' +
+      '<p class="muted">Choose one, then commit before you see what happens. Your evidence notebook is on the side.</p>' +
+      '<fieldset><legend class="sr">Your focus</legend>';
+    CHOICES.forEach(function (c) {
+      var checked = state.choice === c.id ? ' checked' : '';
+      var dis = state.committed ? ' disabled' : '';
+      h += '<label class="opt' + (checked ? ' picked' : '') + '"><input type="radio" name="dec" value="' + c.id + '"' + checked + dis + '><span>' + esc(c.label) + '</span></label>';
+    });
+    h += '</fieldset><button class="btn" id="commit" type="button"' + (state.committed ? ' disabled' : '') + '>Commit to this approach</button>' +
+      '<div id="decFb" role="status" aria-live="polite">' + (state.committed ? '<div class="fb good">You committed to your approach. Select the forward arrow to begin the one-on-one.</div>' : '') + '</div>';
+    $('dialogue').innerHTML = h;
+    $('commit').addEventListener('click', function () {
+      var sel = document.querySelector('input[name="dec"]:checked');
+      if (!sel) { $('decFb').innerHTML = '<div class="fb">Choose an approach first.</div>'; return; }
+      state.choice = sel.value;
+      state.committed = true;
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="dec"]'), function (i) { i.disabled = true; });
+      $('commit').disabled = true;
+      $('decFb').innerHTML = '<div class="fb good">You committed to your approach. Select the forward arrow to begin the one-on-one.</div>';
+      updateControls();
+    });
+  }
+
+  function renderDebrief(sc) {
+    renderStage(sc, null, 0);
+    var outcome = OUTCOMES[state.choice] || [];
+    var res = outcome.filter(function (b) { return b.result; })[0];
+    var h = '<h2 class="prompt">Avoidance describes what Megan does. The clues explain why.</h2>';
+    if (res) h += '<p><strong>Your approach:</strong> ' + esc(choiceById(state.choice).label) + '</p>' + resultHTML(res.result);
+    h += '<table><caption>What each clue pointed to</caption><thead><tr><th scope="col">Where you looked</th><th scope="col">What it showed</th><th scope="col">What it points to</th></tr></thead><tbody>';
+    CLUES.forEach(function (c) {
+      h += '<tr><th scope="row">' + esc(c.title) + (state.clues[c.id] ? '' : ' <em>(not checked)</em>') + '</th><td>' + esc(c.shows) + '</td><td>' + esc(c.points) + '</td></tr>';
+    });
+    h += '</tbody></table>' +
+      '<p class="muted">Several things can contribute at once. Next, you will see a model that helps organize them.</p>' +
+      '<button class="btn secondary" id="retry" type="button">Try a different approach</button>';
+    $('dialogue').innerHTML = h;
+    $('retry').addEventListener('click', function () {
+      state.committed = false; state.choice = null; state.i = idx('decision'); state.beat = 0; draw(true);
+    });
+  }
+
+  function renderAdkar(sc) {
+    renderStage(sc, null, 0);
+    var seen = Object.keys(state.adkarSeen).length;
+    var h = '<h2 class="prompt">Remember ADKAR: a model centered around five employee outcomes that help drive change adoption.</h2>' +
+      '<p class="muted">Select each letter to reveal more. <span id="adkarCount">' + seen + ' of 5 viewed.</span></p><div class="letters" role="group" aria-label="ADKAR letters">';
+    ADKAR.forEach(function (a, k) {
+      h += '<button type="button" class="letter' + (state.adkarSeen[k] ? ' seen' : '') + '" data-k="' + k + '" aria-pressed="' + (state.adkarOpen === k) + '" aria-label="' + esc(a.name) + '">' + a.letter + '</button>';
+    });
+    h += '</div><div id="adkarPanel" role="status" aria-live="polite"></div>';
+    $('dialogue').innerHTML = h;
+    function show(k) {
+      var a = ADKAR[k];
+      state.adkarOpen = k; state.adkarSeen[k] = true;
+      $('adkarPanel').innerHTML = '<div class="clue-card"><p><strong>' + esc(a.name) + '.</strong> ' + esc(a.def) + '</p><p class="muted"><strong>In Megan\'s case:</strong> ' + esc(a.megan) + '</p></div>';
+      Array.prototype.forEach.call(document.querySelectorAll('.letter'), function (b2) {
+        var kk = +b2.getAttribute('data-k');
+        b2.setAttribute('aria-pressed', String(kk === k));
+        if (state.adkarSeen[kk]) b2.classList.add('seen');
+      });
+      $('adkarCount').textContent = Object.keys(state.adkarSeen).length + ' of 5 viewed.';
+      updateControls();
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.letter'), function (btn) {
+      btn.addEventListener('click', function () { show(+btn.getAttribute('data-k')); });
+    });
+    if (state.adkarOpen !== null) show(state.adkarOpen);
+  }
+
+  function renderHypothesis(sc) {
+    renderStage(sc, null, 0);
+    var h = '<h2 class="prompt">Form a hypothesis about change management solutions.</h2>' +
+      '<p>Based on what you have seen, what would you try first with Megan, and why? This is not graded.</p>' +
+      '<label class="block" for="hyp">Your hypothesis (a few sentences)</label>' +
+      '<textarea id="hyp">' + esc(state.hypothesis) + '</textarea>' +
+      '<fieldset><legend class="block">Self-check: does your hypothesis...</legend>' +
+      '<label class="opt"><input type="checkbox" class="chk"><span>name a likely source of the resistance?</span></label>' +
+      '<label class="opt"><input type="checkbox" class="chk"><span>point to evidence from the scenario?</span></label>' +
+      '<label class="opt"><input type="checkbox" class="chk"><span>choose a first action that fits that source?</span></label></fieldset>' +
+      '<div id="chkFb" role="status" aria-live="polite"></div>' +
+      '<details><summary>See a sample hypothesis</summary><div class="sample">I think Megan\'s avoidance starts with awareness: no one explained why we switched. Evidence: her hallway comment, plus an IT ticket that has been open for six weeks. I would start by explaining how the system helps her client work, then clear the ticket and schedule a make-up training session.</div></details>' +
+      '<p class="muted">Write at least a short sentence to continue.</p>';
+    $('dialogue').innerHTML = h;
+    $('hyp').addEventListener('input', function (e) { state.hypothesis = e.target.value; updateControls(); });
+    Array.prototype.forEach.call(document.querySelectorAll('.chk'), function (c) {
+      c.addEventListener('change', function () {
+        var all = Array.prototype.every.call(document.querySelectorAll('.chk'), function (x) { return x.checked; });
+        $('chkFb').innerHTML = all ? '<div class="fb good">A strong hypothesis names a source, points to evidence, and picks a first action that fits.</div>' : '';
+      });
+    });
+  }
+
+  function renderDiscussion(sc) {
+    renderStage(sc, null, 0);
+    var h = '<h2 class="prompt">Discussion</h2>' +
+      '<p>Now that we have gone over ADKAR, reflect on an organizational change that you have led or experienced. Explain what worked well, what did not, and what you would recommend improving in the experience. Then, reply to one colleague\'s experience, identifying one aspect that resembled and one aspect that differed from your own experience.</p>' +
+      '<p class="muted">Prototype note: in the full course this posts to the discussion board. Text here is not saved.</p>' +
+      '<label class="block" for="post">Your reflection</label><textarea id="post">' + esc(state.post) + '</textarea>' +
+      '<div class="sample"><strong>Sample colleague post (placeholder):</strong> "When our team moved to a new scheduling tool, I assumed everyone had seen the announcement. A few people kept using spreadsheets. In hindsight, I should have explained how it would save them time."</div>' +
+      '<label class="block" for="reply">Your reply: one aspect that resembled and one that differed</label><textarea id="reply">' + esc(state.reply) + '</textarea>';
+    $('dialogue').innerHTML = h;
+    $('post').addEventListener('input', function (e) { state.post = e.target.value; });
+    $('reply').addEventListener('input', function (e) { state.reply = e.target.value; });
+  }
+
+  function renderEnd(sc) {
+    renderStage(sc, null, 0);
+    $('dialogue').innerHTML = '<h2 class="prompt">Orientation complete (prototype)</h2>' +
+      '<p>In this module, you:</p><ol><li>Defined organizational change resistance.</li><li>Identified sources of change resistance through evidence.</li><li>Formed a hypothesis about change management solutions.</li></ol>' +
+      '<p class="muted">Next: Module 2, Diagnose the source.</p><button class="btn" id="restart" type="button">Restart</button>';
+    $('restart').addEventListener('click', restart);
+  }
+
+  function renderExited() {
+    $('stage').innerHTML = bgSVG('plain');
+    $('dialogue').innerHTML = '<h2 class="prompt">You have exited the course.</h2><p>Select Restart to begin again.</p><button class="btn" id="restart" type="button">Restart</button>';
+    $('restart').addEventListener('click', restart);
+  }
+
+  function renderNotebook(sc) {
+    var nb = $('notebook'), lay = $('layout');
+    if (!sc.notebook || state.exited) { nb.hidden = true; lay.classList.remove('with-notebook'); return; }
+    var found = CLUES.filter(function (c) { return state.clues[c.id]; });
+    var h = '<h3>Evidence notebook</h3>';
+    if (!found.length) h += '<p class="muted">Nothing yet. Look into a few things.</p>';
+    else { h += '<ul>'; found.forEach(function (c) { h += '<li>' + esc(c.note) + '</li>'; }); h += '</ul>'; }
+    nb.innerHTML = h; nb.hidden = false; lay.classList.add('with-notebook');
+  }
+
+  /* ============ NAVIGATION ============ */
+
+  function atEndOfBeats(sc) { return typeOf(sc) !== 'story' || state.beat >= getBeats(sc).length - 1; }
+
+  function canAdvance() {
+    var sc = SCENES[state.i];
+    switch (typeOf(sc)) {
+      case 'quiz': return state.quizDone;
+      case 'hub': return clueCount() >= 2;
+      case 'decision': return state.committed;
+      case 'adkar': return Object.keys(state.adkarSeen).length >= 5;
+      case 'hypothesis': return state.hypothesis.trim().length >= 10;
+      case 'end': return false;
+      default: return true;
+    }
+  }
+
+  function updateControls() {
+    var sc = SCENES[state.i], last = state.i === SCENES.length - 1;
+    $('btnBack').disabled = state.exited || (state.i === 0 && state.beat === 0);
+    $('btnNext').disabled = state.exited || (!atEndOfBeats(sc) ? false : (last ? true : !canAdvance()));
+    $('progressText').textContent = 'Scene ' + (state.i + 1) + ' of ' + SCENES.length;
+    $('progressFill').style.width = ((state.i + 1) / SCENES.length * 100) + '%';
+  }
+
+  function draw(sceneChanged) {
+    if (state.exited) { renderExited(); $('notebook').hidden = true; updateControls(); return; }
+    var sc = SCENES[state.i], type = typeOf(sc), dlg = $('dialogue');
+    dlg.setAttribute('aria-live', type === 'story' ? 'polite' : 'off');
+    var map = { story: renderStory, quiz: renderQuiz, hub: renderHub, decision: renderDecision, debrief: renderDebrief,
+                adkar: renderAdkar, hypothesis: renderHypothesis, discussion: renderDiscussion, end: renderEnd };
+    map[type](sc);
+    renderNotebook(sc);
+    updateControls();
+    if (sceneChanged && type !== 'story') dlg.focus({ preventScroll: true });
+  }
+
+  function next() {
+    var sc = SCENES[state.i];
+    if (typeOf(sc) === 'story' && state.beat < getBeats(sc).length - 1) { state.beat++; draw(false); return; }
+    if (!canAdvance() || state.i >= SCENES.length - 1) return;
+    state.i++; state.beat = 0; draw(true);
+  }
+
+  function back() {
+    var sc = SCENES[state.i];
+    if (typeOf(sc) === 'story' && state.beat > 0) { state.beat--; draw(false); return; }
+    if (state.i === 0) return;
+    state.i--;
+    var p = SCENES[state.i];
+    state.beat = typeOf(p) === 'story' ? getBeats(p).length - 1 : 0;
+    draw(true);
+  }
+
+  function restart() { state = freshState(); draw(true); }
+
+  $('btnNext').addEventListener('click', next);
+  $('btnBack').addEventListener('click', back);
+  $('btnExit').addEventListener('click', function () { $('exitModal').hidden = false; $('exitStay').focus(); });
+  $('exitStay').addEventListener('click', function () { $('exitModal').hidden = true; $('btnExit').focus(); });
+  $('exitConfirm').addEventListener('click', function () { $('exitModal').hidden = true; state.exited = true; draw(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('exitModal').hidden) { $('exitModal').hidden = true; $('btnExit').focus(); return; }
+    var t = e.target && e.target.tagName;
+    if (t === 'TEXTAREA' || t === 'INPUT' || t === 'SELECT') return;
+    if (!$('exitModal').hidden) return;
+    if (e.key === 'ArrowRight') { next(); }
+    else if (e.key === 'ArrowLeft') { back(); }
+  });
+
+  draw(false);
+})();
+</script>
+</body>
+</html>
